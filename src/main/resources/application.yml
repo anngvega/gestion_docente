@@ -1,29 +1,24 @@
-server:
-  port: 8080
-
 spring:
   datasource:
     url: jdbc:mysql://localhost:3306/gestion_docente?serverTimezone=America/Lima&allowPublicKeyRetrieval=true&useSSL=false
-    driver-class-name: com.mysql.cj.jdbc.Driver
     username: root
-    password: ${DB_PASSWORD:mysql}
-    hikari:
-      maximum-pool-size: 10
-      minimum-idle: 5
-      idle-timeout: 600000
-      max-lifetime: 1800000
-      connection-timeout: 30000
+    password: mysql
   jpa:
-    database-platform: org.hibernate.dialect.MySQL8Dialect
-    open-in-view: false
-    show-sql: true
     hibernate:
       ddl-auto: update
+    show-sql: true
     properties:
       hibernate.format_sql: true
-
 security:
   jwt:
-    secret: ${JWT_SECRET:TDSZydxbpLTzBiSyAdfK6qzd8nBt9WeOFBO-Pi7NO5X1IWgLA594XmYEj99lEK_ZEyKKs2dkmIe8g1dFBYuQJg}
-    access-token-expiration: 900000
-    refresh-token-expiration: 900000
+    # clave en BASE64URL (válida para HMAC-SHA256)
+    secret: QulywYuiMZzR90QVVIuIZs9UmBAbDkQQvBmYHlRJtfmJPcfZoa7Hkzv-P9Tvy10f5NvAASEt1NAyS4ZGoWHAEw
+    access-token-expiration: 900000   # 15 min en ms
+    refresh-token-expiration: 1800000 # 30 min en ms (o lo que prefieras)
+    
+logging:
+  level:
+    org.hibernate.SQL: debug
+    org.springframework.security: DEBUG
+    pe.cibertec.gestion_docente: DEBUG
+    org.hibernate.orm.jdbc.bind: trace

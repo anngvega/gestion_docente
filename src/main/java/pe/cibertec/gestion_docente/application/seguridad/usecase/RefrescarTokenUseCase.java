@@ -1,20 +1,33 @@
 package pe.cibertec.gestion_docente.application.seguridad.usecase;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import pe.cibertec.gestion_docente.domain.seguridad.model.SeguridadModel;
+import pe.cibertec.gestion_docente.domain.seguridad.model.UsuarioModel;
 import pe.cibertec.gestion_docente.domain.seguridad.service.TokenService;
-import pe.cibertec.gestion_docente.infrastructure.seguridad.jpa.UsuarioRepositoryJpa;
-import pe.cibertec.gestion_docente.presentation.dto.auth.LoginResponseDto;
+import pe.cibertec.gestion_docente.infrastructure.configuration.seguridad.CustomUserDetails;
+import pe.cibertec.gestion_docente.infrastructure.persistence.seguridad.service.CustomUserDetailsService;
 
-@Component @RequiredArgsConstructor
+@Slf4j
+@Component
+@RequiredArgsConstructor
 public class RefrescarTokenUseCase {
-    private final UsuarioRepositoryJpa usuarios;
-    private final TokenService tokens;
 
-    public LoginResponseDto ejecutar(String refreshToken){
-        if(!tokens.esTokenValido(refreshToken)) throw new IllegalArgumentException("Refresh token inválido");
-        var username = tokens.extraerUsuario(refreshToken);
-        var u = usuarios.findByUsuario(username).orElseThrow(() -> new IllegalArgumentException("Usuario no existe"));
-        return new LoginResponseDto(tokens.generarTokenAcceso(u), tokens.generarTokenRefresco(u), 900);
+    private final TokenService tokenService;
+    private final CustomUserDetailsService uds;
+
+    public SeguridadModel ejecutar(String refreshToken) {
+        if (!tokenService.esTokenValido(refreshToken)) {
+            log.warn("Refresh inválido");
+            throw new RuntimeException("Refresh token inválido o expirado");
+        }
+        String username = tokenService.extraerUsuario(refreshToken);
+        CustomUserDetails cud = (CustomUserDetails) uds.loadUserByUsername(username);
+        UsuarioModel u = cud.getUsuario();
+        return SeguridadModel.builder()
+                .token(tokenService.generarTokenAcceso(u))
+                .refresh(tokenService.generarTokenRefresco(u))
+                .build();
     }
 }

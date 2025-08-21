@@ -1,10 +1,12 @@
 package pe.cibertec.gestion_docente.domain.seguridad.service;
 
-import pe.cibertec.gestion_docente.infrastructure.seguridad.entity.UsuarioEntity;
+import org.springframework.security.core.userdetails.UserDetails;
+import pe.cibertec.gestion_docente.domain.seguridad.model.UsuarioModel;
 
 public interface TokenService {
-    String generarTokenAcceso(UsuarioEntity usuario);
-    String generarTokenRefresco(UsuarioEntity usuario);
-    boolean esTokenValido(String token);
+    String generarTokenAcceso(UsuarioModel usuario);
+    String generarTokenRefresco(UsuarioModel usuario);
     String extraerUsuario(String token);
+    boolean esTokenValido(String token);
+    UserDetails crearUserDetailsDesdeToken(String token);
 }
