@@ -9,4 +9,5 @@ public interface TokenService {
     String extraerUsuario(String token);
     boolean esTokenValido(String token);
     UserDetails crearUserDetailsDesdeToken(String token);
+    long segundosHastaExpirar(String token);
 }

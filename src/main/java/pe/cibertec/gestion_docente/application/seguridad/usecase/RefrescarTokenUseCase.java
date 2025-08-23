@@ -26,8 +26,8 @@ public class RefrescarTokenUseCase {
         CustomUserDetails cud = (CustomUserDetails) uds.loadUserByUsername(username);
         UsuarioModel u = cud.getUsuario();
         return SeguridadModel.builder()
-                .token(tokenService.generarTokenAcceso(u))
-                .refresh(tokenService.generarTokenRefresco(u))
+                .accessToken(tokenService.generarTokenAcceso(u))
+                .refreshToken(tokenService.generarTokenRefresco(u))
                 .build();
     }
 }

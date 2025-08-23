@@ -3,7 +3,10 @@ package pe.cibertec.gestion_docente.domain.shared.valueobject;
 import lombok.Builder;
 import lombok.Value;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Value
 @Builder
@@ -28,6 +31,22 @@ public class PaginaResult<T> {
                 .primera(pagina == 0)
                 .ultima(pagina >= totalPaginas - 1)
                 .vacia(contenido.isEmpty())
+                .build();
+    }
+    public <U> PaginaResult<U> map(Function<? super T, ? extends U> fn) {
+        List<U> nuevoContenido = (contenido == null)
+                ? Collections.emptyList()
+                : contenido.stream().map(fn).collect(Collectors.toList());
+
+        return PaginaResult.<U>builder()
+                .contenido(nuevoContenido)
+                .paginaActual(paginaActual)
+                .tamanio(tamanio)
+                .totalElementos(totalElementos)
+                .totalPaginas(totalPaginas)
+                .primera(primera)
+                .ultima(ultima)
+                .vacia(nuevoContenido.isEmpty())
                 .build();
     }
 }

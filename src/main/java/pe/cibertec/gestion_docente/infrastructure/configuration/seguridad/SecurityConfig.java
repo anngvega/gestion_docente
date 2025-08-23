@@ -1,6 +1,5 @@
 package pe.cibertec.gestion_docente.infrastructure.configuration.seguridad;
 
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -35,13 +34,12 @@ public class SecurityConfig {
 
     @Bean
     public DaoAuthenticationProvider daoAuthenticationProvider() {
-        DaoAuthenticationProvider p = new DaoAuthenticationProvider();
+        var p = new DaoAuthenticationProvider();
         p.setUserDetailsService(userDetailsService);
         p.setPasswordEncoder(passwordEncoder());
         return p;
     }
 
-    // ⬇️ Construimos explicitamente el AuthenticationManager con nuestro provider
     @Bean
     public AuthenticationManager authenticationManager() {
         return new ProviderManager(daoAuthenticationProvider());
@@ -52,17 +50,15 @@ public class SecurityConfig {
         return http
                 .cors(c -> c.configurationSource(corsConfigurationSource))
                 .csrf(AbstractHttpConfigurer::disable)
-                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.POST, "/public/auth/login", "/public/auth/refresh").permitAll()
+                        // Público
                         .requestMatchers("/public/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/public/auth/login", "/public/auth/refresh").permitAll()
+                        // Todo lo demás requiere token
                         .anyRequest().authenticated()
                 )
-                .exceptionHandling(ex -> ex
-                        .authenticationEntryPoint((req, res, e) -> res.sendError(HttpServletResponse.SC_UNAUTHORIZED))
-                        .accessDeniedHandler((req, res, e) -> res.sendError(HttpServletResponse.SC_FORBIDDEN))
-                )
-                .authenticationProvider(daoAuthenticationProvider())
+                // ¡IMPORTANTE! Registrar el filtro que lee/valida el Bearer y mete las authorities
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }

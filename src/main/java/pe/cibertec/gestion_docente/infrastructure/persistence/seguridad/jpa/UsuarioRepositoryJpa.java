@@ -10,11 +10,12 @@ import java.util.Optional;
 public interface UsuarioRepositoryJpa extends JpaRepository<UsuarioEntity, Long> {
 
     @Query("""
-           SELECT DISTINCT u FROM UsuarioEntity u
-           LEFT JOIN FETCH u.docente d
-           LEFT JOIN FETCH u.roles ur
-           LEFT JOIN FETCH ur.rol r
-           WHERE u.activo = true AND u.username = :username
-           """)
+  select u
+  from UsuarioEntity u
+  left join fetch u.roles ur
+  left join fetch ur.rol r
+  left join fetch u.docente d
+  where u.username = :username
+""")
     Optional<UsuarioEntity> usuarioPorUsername(@Param("username") String username);
 }

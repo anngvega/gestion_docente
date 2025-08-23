@@ -7,9 +7,9 @@ import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
-import pe.cibertec.gestion_docente.domain.seguridad.model.RolModel;
 import pe.cibertec.gestion_docente.domain.seguridad.model.UsuarioModel;
 import pe.cibertec.gestion_docente.domain.seguridad.service.TokenService;
 import pe.cibertec.gestion_docente.infrastructure.configuration.seguridad.JwtProperties;
@@ -29,8 +29,12 @@ public class JwtTokenServiceImpl implements TokenService {
     public String generarTokenAcceso(UsuarioModel usuario) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("name", usuario.getNombre() + " " + usuario.getApellido());
+
+        // Guarda nombres “planos”: ADMINISTRATIVO, DOCENTE, etc.
         claims.put("roles", usuario.getRoles().stream()
-                .map(r -> "ROLE_" + r.getNombre()).toList());
+                .map(r -> r.getNombre())  // <- SIN "ROLE_"
+                .toList());
+
         claims.put("id_docente", usuario.getIdDocente());
         return generar(claims, usuario.getUsername(), jwt.getAccessTokenExpiration());
     }
@@ -59,10 +63,21 @@ public class JwtTokenServiceImpl implements TokenService {
     public UserDetails crearUserDetailsDesdeToken(String token) {
         String username = extraerUsuario(token);
         Collection<GrantedAuthority> auths = extraerRoles(token).stream()
-                .map(r -> (GrantedAuthority) () -> r)
+                .map(r -> new SimpleGrantedAuthority("ROLE_" + r)) // <-- aquí el prefijo
                 .collect(Collectors.toSet());
+
         return org.springframework.security.core.userdetails.User.builder()
-                .username(username).password("").authorities(auths).build();
+                .username(username)
+                .password("")  // no se usa
+                .authorities(auths)
+                .build();
+    }
+
+    @Override
+    public long segundosHastaExpirar(String token) {
+        var exp = all(token).getExpiration();
+        long now = System.currentTimeMillis();
+        return Math.max(0, (exp.getTime() - now) / 1000);
     }
 
     private String generar(Map<String, Object> claims, String sub, long expMs) {
