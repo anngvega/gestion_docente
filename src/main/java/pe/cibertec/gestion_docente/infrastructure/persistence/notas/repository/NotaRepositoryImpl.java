@@ -16,7 +16,9 @@ import pe.cibertec.gestion_docente.infrastructure.persistence.notas.jpa.Estructu
 import pe.cibertec.gestion_docente.infrastructure.persistence.notas.jpa.NotaRepositoryJpa;
 import pe.cibertec.gestion_docente.infrastructure.persistence.notas.mapper.NotaMapper;
 
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 @RequiredArgsConstructor
@@ -62,5 +64,37 @@ public class NotaRepositoryImpl implements NotaRepository {
                 .toList();
 
         return PaginaResult.of(contenido, page.getNumber(), page.getSize(), page.getTotalElements());
+    }
+    @Override
+    public PaginaResult<EstructuraNotaModel> listarEstructuras(Long idCurso, PaginacionRequest p) {
+        var sort = p.isAscendente() ? Sort.by(p.getOrdenarPor()).ascending() : Sort.by(p.getOrdenarPor()).descending();
+        var pageable = PageRequest.of(p.getPagina(), p.getTamanio(), sort);
+
+        Page<EstructuraNotaEntity> page = (idCurso == null)
+                ? estructuraJpa.findAll(pageable)
+                : estructuraJpa.findByIdCurso(idCurso, pageable);
+
+        var contenido = page.getContent().stream().map(mapper::map).toList();
+        return PaginaResult.of(contenido, page.getNumber(), page.getSize(), page.getTotalElements());
+    }
+
+    @Override
+    public Optional<EstructuraNotaModel> obtenerEstructura(Long idEstructura) {
+        return estructuraJpa.findById(idEstructura).map(mapper::map);
+    }
+
+    @Override
+    public EstructuraNotaModel actualizarEstructura(EstructuraNotaModel model) {
+        var existente = estructuraJpa.findById(model.getIdEstructura())
+                .orElseThrow(() -> new IllegalArgumentException("Estructura no encontrada"));
+        existente.setIdCurso(model.getIdCurso());
+        existente.setDescripcion(model.getDescripcion());
+        existente.setPeso(model.getPeso() == null ? null : BigDecimal.valueOf(model.getPeso()));
+        return mapper.map(estructuraJpa.save(existente));
+    }
+
+    @Override
+    public void eliminarEstructura(Long idEstructura) {
+        estructuraJpa.deleteById(idEstructura);
     }
 }
