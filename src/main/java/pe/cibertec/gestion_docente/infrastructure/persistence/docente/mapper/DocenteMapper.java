@@ -6,7 +6,7 @@ import pe.cibertec.gestion_docente.infrastructure.persistence.docente.entity.Doc
 
 @Component
 public class DocenteMapper {
-    public DocenteModel map(DocenteEntity e) {
+    public DocenteModel toModel(DocenteEntity e) {
         if (e == null) return null;
         return DocenteModel.builder()
                 .idDocente(e.getId())

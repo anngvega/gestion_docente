@@ -14,7 +14,13 @@ public class ListarDocentesUseCase {
   private final DocenteService service;
   private final DocenteDtoMapper mapper;
 
-  public PaginaResult<DocenteResponseDto> ejecutar(PaginacionRequest pag) {
-    return service.listar(pag).map(mapper::toDto);
+    public PaginaResult<DocenteResponseDto> ejecutar(PaginacionRequest pag) {
+        var pageModel = service.listar(pag);
+        return PaginaResult.of(
+                pageModel.getContenido().stream().map(mapper::toDto).toList(),
+                pageModel.getPaginaActual(),
+                pageModel.getTamanio(),
+                pageModel.getTotalElementos()
+        );
   }
 }

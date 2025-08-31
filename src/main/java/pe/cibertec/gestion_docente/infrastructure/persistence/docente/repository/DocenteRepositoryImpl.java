@@ -18,31 +18,38 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class DocenteRepositoryImpl implements DocenteRepository {
 
-    private final DocenteRepositoryJpa docenteJpa;
-    private final DocenteMapper mapper;
+    private final DocenteRepositoryJpa docenteRepositoryJpa;
+    private final DocenteMapper docenteMapper;
+
+    @Override
+    public PaginaResult<DocenteModel> listar(PaginacionRequest pag) {
+        Pageable pageable = PageRequest.of(
+                pag.getPagina(),
+                pag.getTamanio(),
+                pag.getDireccion().equalsIgnoreCase("desc") ?
+                        Sort.by(pag.getOrdenarPor()).descending() :
+                        Sort.by(pag.getOrdenarPor()).ascending()
+        );
+
+        Page<DocenteEntity> page = docenteRepositoryJpa.findAll(pageable);
+
+        List<DocenteModel> docentes = page.getContent().stream()
+                .map(docenteMapper::toModel)
+                .toList();
+
+        return PaginaResult.of(docentes, page.getNumber(), page.getSize(), page.getTotalElements());
+    }
 
     @Override
     public boolean existeActivo(Integer idDocente) {
-        return docenteJpa.existsActivoById(idDocente);
+        return docenteRepositoryJpa.existsActivoById(idDocente);
     }
 
     @Override
     public Optional<DocenteModel> porId(Integer idDocente) {
-        return docenteJpa.findById(idDocente).map(mapper::map);
+        return docenteRepositoryJpa.findById(idDocente).map(docenteMapper::toModel);
     }
 
-    @Override
-    public PaginaResult<DocenteModel> listar(PaginacionRequest req) {
-        Pageable pageable = toPageable(req);
-        Page<DocenteEntity> page = docenteJpa.findAll(pageable);
-
-        List<DocenteModel> items = page.getContent()
-                .stream()
-                .map(mapper::map)        // <-- tu mapper tiene 'map', no 'toModel'
-                .toList();
-
-        return PaginaResult.of(items, page.getNumber(), page.getSize(), page.getTotalElements());
-    }
 
     private Pageable toPageable(PaginacionRequest p) {
         String sortProp = (p.getOrdenarPor() == null || p.getOrdenarPor().isBlank())
