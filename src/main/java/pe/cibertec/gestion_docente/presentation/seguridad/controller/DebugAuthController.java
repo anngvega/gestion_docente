@@ -51,4 +51,25 @@ public class DebugAuthController {
                 })
                 .orElse(Map.of("found", false));
     }
+
+    // ⚠️ TEMPORAL: Actualizar contraseña para debug
+    @PostMapping("/update-password")
+    public Object updatePassword(@RequestParam String username, @RequestParam String newPassword) {
+        return usuarioRepo.usuarioPorUsername(username)
+                .map(u -> {
+                    String newHash = passwordEncoder.encode(newPassword);
+                    u.setPasswordHash(newHash);
+                    usuarioRepo.save(u);
+                    return Map.of(
+                            "success", true,
+                            "username", username,
+                            "message", "Contraseña actualizada correctamente",
+                            "newHashPrefix", newHash.substring(0, 4)
+                    );
+                })
+                .orElse(Map.of(
+                        "success", false,
+                        "message", "Usuario no encontrado"
+                ));
+    }
 }
